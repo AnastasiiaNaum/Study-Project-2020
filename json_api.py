@@ -1,5 +1,6 @@
+import numpy as np
 from flask import Flask
-from flask_restful  import reqparse, Api, Resource
+from flask_restful import reqparse, Api, Resource
 
 from optics import OPTICS
 
@@ -8,45 +9,58 @@ api = Api(app)
 
 all_exps = {}
 
-def exists(exp_id):
+
+def not_exist(exp_id):
     if exp_id not in all_exps:
         return 1
     return 0
-    
-#single experiment
+
+
+# single experiment
 class Experiment(Resource):
     def get(self, exp_id):
-        not_exist = exists(exp_id)
-        if (not_exist):
+        not_ex = not_exist(exp_id)
+        if (not_ex):
             return 404, "this experiment doesn't exist"
         return all_exps[exp_id]
 
     def post(self, exp_id):
         pars = reqparse.RequestParser()
-        pars.add_argument('dataset')  
+        # pars.add_argument('dataset')
         pars.add_argument('eps', type=float)
         pars.add_argument('min_pts', type=int)
         args = pars.parse_args()
 
+        not_ex = not_exist(exp_id)
+        if (not_ex):
+            return "this experiment doesn't exist", 404
         if (all_exps[exp_id] != {}):
-            return 409, "begin new experiment"
+            return "begin new experiment", 409
 
-        if (args['dataset'] is None):
-            return 400, "dataset is not given"
+        # if (args['dataset'] is None):
+        #     return 400, "dataset is not given"
 
         if ((args['eps'] is None) or (args['min_pts'] is None)):
             return 400, "not enough parameters for OPTICS"
-
-        labels = OPTICS(args['dataset'], args['eps'], args['min_pts'])
+        N = 100
+        n = N // 2
+        np.random.seed(42)
+        x = np.random.normal(0, 1, (n, 2))
+        x = np.append(x, np.random.normal(10, 1, (n, 2)), axis=0)
+        x = np.append(x, np.random.normal(20, 1, (n, 2)), axis=0)
+        data = x
+        # data = args['dataset']
+        labels = OPTICS(data, args['eps'], args['min_pts'])
         all_exps[exp_id] = labels
         return labels, 201
 
     def delete(self, exp_id):
-        not_exist = exists(exp_id)
-        if (not_exist):
+        not_ex = not_exist(exp_id)
+        if (not_ex):
             return 404, "this experiment doesn't exist"
         del all_exps[exp_id]
         return '', 204
+
 
 # multiple experiments
 class ExperimentList(Resource):
@@ -61,8 +75,10 @@ class ExperimentList(Resource):
         all_exps[exp_id] = {}
         return all_exps[exp_id], 201
 
+
 api.add_resource(ExperimentList, '/all_exps')
 api.add_resource(Experiment, '/all_exps/<int:exp_id>')
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
