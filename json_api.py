@@ -26,7 +26,7 @@ class Experiment(Resource):
 
     def post(self, exp_id):
         pars = reqparse.RequestParser()
-        # pars.add_argument('dataset')
+        pars.add_argument('dataset')
         pars.add_argument('eps', type=float)
         pars.add_argument('min_pts', type=int)
         args = pars.parse_args()
@@ -37,19 +37,12 @@ class Experiment(Resource):
         if (all_exps[exp_id] != {}):
             return "begin new experiment", 409
 
-        # if (args['dataset'] is None):
-        #     return 400, "dataset is not given"
+        if (args['dataset'] is None):
+            return 400, "dataset is not given"
 
         if ((args['eps'] is None) or (args['min_pts'] is None)):
             return 400, "not enough parameters for OPTICS"
-        N = 100
-        n = N // 2
-        np.random.seed(42)
-        x = np.random.normal(0, 1, (n, 2))
-        x = np.append(x, np.random.normal(10, 1, (n, 2)), axis=0)
-        x = np.append(x, np.random.normal(20, 1, (n, 2)), axis=0)
-        data = x
-        # data = args['dataset']
+        data = args['dataset']
         labels = OPTICS(data, args['eps'], args['min_pts'])
         all_exps[exp_id] = labels
         return labels, 201
