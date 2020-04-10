@@ -57,7 +57,7 @@ class Experiment(Resource):
     def delete(self, exp_id):
         not_ex = not_exist(exp_id)
         if (not_ex):
-            return 404, "this experiment doesn't exist"
+            return "this experiment doesn't exist", 404
         del all_exps[exp_id]
         return '', 204
 
