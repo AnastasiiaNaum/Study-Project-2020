@@ -1,7 +1,9 @@
 # Study-Project-2020
 Development of a system for predicting the successful completion of a subject
 
-Requests description:
+Results of classterisation are in file Progect_results
+
+API Requests description:
 
 http://127.0.0.1:5000/all_exps : 
 
